@@ -9,8 +9,7 @@
 * [실습 tf.data 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day1_3_tf_data.ipynb)     
 * [실습 session 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day1_4_Session.ipynb)    
 * [실습 estimator 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day1_5_Estimator.ipynb)     
-
-
+  
 
 # Requirement  
 * [google Colab Notebook](https://colab.research.google.com/notebooks/welcome.ipynb#recent=true)  
