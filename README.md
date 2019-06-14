@@ -20,8 +20,11 @@
 
 <b> 3 주차  
 * [이론 Lecture3.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture3.pdf)   
-* [실습 One Hot Encoding 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day2_1_One_Hot_Encoding.ipynb)   
-
+* [실습 Naver Movie Review EDA 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day3_1_Naver_Movie_Review_EDA_Preprocessing.ipynb)   
+* [실습 Yoon Kim Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day3_2_Yoon_Kim_Model.ipynb)    
+* [실습 RandomForest 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day3_3_RandomForest.ipynb)  
+  
+  
 
 # Requirement  
 * [google Colab Notebook](https://colab.research.google.com/notebooks/welcome.ipynb#recent=true)  
