@@ -18,6 +18,10 @@
 * [실습 Word2Vec(skip_gram) 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day2_4_Word2Vec(skip_gram).ipynb)   
 * [실습 Word2Vec(Gensim) 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day2_5_gensim_word2vec.ipynb)   
 
+<b> 3 주차  
+* [이론 Lecture3.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture3.pdf)   
+* [실습 One Hot Encoding 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day2_1_One_Hot_Encoding.ipynb)   
+
 
 # Requirement  
 * [google Colab Notebook](https://colab.research.google.com/notebooks/welcome.ipynb#recent=true)  
