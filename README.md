@@ -26,10 +26,11 @@
   
 <b> 4 주차  
 * [이론 Lecture4.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture4.pdf)   
-* [실습 Text Similarity EDA 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day4_1_Text_Similarity_EDA_Preprocessing_.ipynb)   
+* [실습 Text Similarity EDA 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day4_1_Text_Similarity_EDA_Preprocessing.ipynb)   
 * [실습 Ma LSTM Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day4_2_Ma_LSTM.ipynb)    
 * [실습 XGBoost 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day4_3_XGBoost.ipynb)    
-
+* [실습 Word2Vec Modeling 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day4_4_Word2Vec_Modeling.ipynb)    
+  
 # Requirement  
 * [google Colab Notebook](https://colab.research.google.com/notebooks/welcome.ipynb#recent=true)  
 
