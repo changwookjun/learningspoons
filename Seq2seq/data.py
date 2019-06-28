@@ -37,7 +37,7 @@ def prepro_like_morphlized(data):
     morph_analyzer = Okt()
     result_data = list()
     for seq in tqdm(data):
-        morphlized_seq = " ".join(morph_analyzer.morphs(seq.replace(' ', '')))
+        morphlized_seq = " ".join(morph_analyzer.morphs(seq))
         result_data.append(morphlized_seq)
 
     return result_data
