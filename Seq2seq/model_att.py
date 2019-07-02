@@ -11,105 +11,38 @@ def make_lstm_cell(mode, hiddenSize, index):
         cell = tf.contrib.rnn.DropoutWrapper(cell, output_keep_prob=DEFINES.dropout_width)
     return cell
 
-# 에스티메이터 모델 부분이다.
-# freatures : tf.data.Dataset.map을 통해서 만들어진 
-# features = {"input": input, "length": length}
-# labels : tf.data.Dataset.map을 통해서 만들어진 target
-# mode는 에스티메이터 함수를 호출하면 에스티메이터 
-# 프레임워크 모드의 값이 해당 부분이다.
-# params : 에스티메이터를 구성할때 params 값들이다. 
-# (params={ # 모델 쪽으로 파라메터 전달한다.)
 def model(features, labels, mode, params):
     TRAIN = mode == tf.estimator.ModeKeys.TRAIN
     EVAL = mode == tf.estimator.ModeKeys.EVAL
     PREDICT = mode == tf.estimator.ModeKeys.PREDICT
 
-    # 미리 정의된  임베딩 사용 유무를 확인 한다.
-    # 값이 True이면 임베딩을 해서 학습하고 False이면 
-    # onehotencoding 처리 한다.
-    if params['embedding'] == True:
-        # 가중치 행렬에 대한 초기화 함수이다.
-        # xavier (Xavier Glorot와 Yoshua Bengio (2010)
-        # URL : http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
-        initializer = tf.contrib.layers.xavier_initializer()
-        # 인코딩 변수를 선언하고 값을 설정한다.
-        embedding_encoder = tf.get_variable(name="embedding_encoder",  # 이름
-                                           shape=[params['vocabulary_length'], params['embedding_size']],  # 모양
-                                           dtype=tf.float32,  # 타입
-                                           initializer=initializer,  # 초기화 값
-                                           trainable=True)  # 학습 유무
-    else:
-        # tf.eye를 통해서 사전의 크기 만큼의 단위행렬 
-        # 구조를 만든다.
-        embedding_encoder = tf.eye(num_rows=params['vocabulary_length'], dtype=tf.float32)
-        # 인코딩 변수를 선언하고 값을 설정한다.
-        embedding_encoder = tf.get_variable(name="embedding_encoder",  # 이름
-                                           initializer=embedding_encoder,  # 초기화 값
-                                           trainable=False)  # 학습 유무
+    initializer = tf.contrib.layers.xavier_initializer()
 
-    # embedding_lookup을 통해서 features['input']의 인덱스를
-    # 위에서 만든 embedding_encoder의 인덱스의 값으로 변경하여 
-    # 임베딩된 디코딩 배치를 만든다.
+    embedding_encoder = tf.get_variable(name="embedding_encoder",  
+                                        shape=[params['vocabulary_length'], params['embedding_size']],  
+                                        dtype=tf.float32,  
+                                        initializer=initializer,  
+                                        trainable=True)  
+
     embedding_encoder_batch = tf.nn.embedding_lookup(params=embedding_encoder, ids=features['input'])
 
-    # 미리 정의된  임베딩 사용 유무를 확인 한다.
-    # 값이 True이면 임베딩을 해서 학습하고 False이면 
-    # onehotencoding 처리 한다.
-    if params['embedding'] == True:
-        # 가중치 행렬에 대한 초기화 함수이다.
-        # xavier (Xavier Glorot와 Yoshua Bengio (2010)
-        # URL : http://proceedings.mlr.press/v9/glorot10a/glorot10a.pdf
-        initializer = tf.contrib.layers.xavier_initializer()
-        # 디코딩 변수를 선언하고 값을 설정한다.
-        embedding_decoder = tf.get_variable(name="embedding_decoder",  # 이름
-                                           shape=[params['vocabulary_length'], params['embedding_size']],  # 모양
-                                           dtype=tf.float32,  # 타입
-                                           initializer=initializer,  # 초기화 값
-                                           trainable=True)  # 학습 유무
-    else:
-        # tf.eye를 통해서 사전의 크기 만큼의 단위행렬 
-        # 구조를 만든다.
-        embedding_decoder = tf.eye(num_rows=params['vocabulary_length'], dtype=tf.float32)
-        # 인코딩 변수를 선언하고 값을 설정한다.
-        embedding_decoder = tf.get_variable(name='embedding_decoder',  # 이름
-                                           initializer=embedding_decoder,  # 초기화 값
-                                           trainable=False)  # 학습 유무
+    embedding_decoder = tf.get_variable(name="embedding_decoder",  
+                                        shape=[params['vocabulary_length'], params['embedding_size']],  
+                                        dtype=tf.float32,  
+                                        initializer=initializer,  
+                                        trainable=True)  
 
-    # 변수 재사용을 위해서 reuse=.AUTO_REUSE를 사용하며 범위를
-    # 정해주고 사용하기 위해 scope설정을 한다.
-    # make_lstm_cell이 "cell"반복적으로 호출 되면서 재사용된다.
     with tf.variable_scope('encoder_scope', reuse=tf.AUTO_REUSE):
-        # 값이 True이면 멀티레이어로 모델을 구성하고 False이면 
-        # 단일레이어로 모델을 구성 한다.
-        if params['multilayer'] == True:
-            # layerSize 만큼  LSTMCell을  encoder_cell_list에 담는다.
-            encoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
-            # MUltiLayer RNN CEll에 encoder_cell_list를 넣어 멀티 레이어를 만든다.
-            rnn_cell = tf.contrib.rnn.MultiRNNCell(encoder_cell_list, state_is_tuple=False)
-        else:
-            # 단층 LSTMLCell을 만든다.
-            rnn_cell = make_lstm_cell(mode, params['hidden_size'], "")
-        # rnn_cell에 의해 지정된 반복적인 신경망을 만든다.
-        # encoder_outputs(RNN 출력 Tensor)[batch_size, 
-        # max_time, cell.output_size]
-        # encoder_states 최종 상태  [batch_size, cell.state_size]
-        encoder_outputs, encoder_states = tf.nn.dynamic_rnn(cell=rnn_cell,  # RNN 셀
-                                                              inputs=embedding_encoder_batch,  # 입력 값
-                                                              dtype=tf.float32)  # 타입
-        # 변수 재사용을 위해서 reuse=.AUTO_REUSE를 사용하며 범위를 정해주고
-        # 사용하기 위해 scope설정을 한다.
-        # make_lstm_cell이 "cell"반복적으로 호출 되면서 재사용된다.
+        encoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
+        rnn_cell = tf.contrib.rnn.MultiRNNCell(encoder_cell_list, state_is_tuple=False)
+
+        encoder_outputs, encoder_states = tf.nn.dynamic_rnn(cell=rnn_cell,  
+                                                              inputs=embedding_encoder_batch,  
+                                                              dtype=tf.float32)  
+
     with tf.variable_scope('decoder_scope', reuse=tf.AUTO_REUSE):
-        # 값이 True이면 멀티레이어로 모델을 구성하고 False이면 단일레이어로
-        # 모델을 구성 한다.
-        if params['multilayer'] == True:
-            # layer_size 만큼  LSTMCell을  decoder_cell_list에 담는다.
-            decoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
-            # MUltiLayer RNN CEll에 decoder_cell_list를 넣어 멀티 레이어를 만든다.
-            rnn_cell = tf.contrib.rnn.MultiRNNCell(decoder_cell_list, state_is_tuple=False)
-        else:
-            # 단층 LSTMLCell을 만든다.
-            rnn_cell = make_lstm_cell(mode, params['hidden_size'], "")
+        decoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
+        rnn_cell = tf.contrib.rnn.MultiRNNCell(decoder_cell_list, state_is_tuple=False)
 
         decoder_state = encoder_states
         # 매 타임 스텝에 나오는 아웃풋을 저장하는 리스트 두개를 만든다. 
