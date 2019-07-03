@@ -18,44 +18,43 @@ def model(features, labels, mode, params):
 
     initializer = tf.contrib.layers.xavier_initializer()
 
-    embedding_encoder = tf.get_variable(name="embedding_encoder",  
+    embedding_encoder = tf.get_variable(name="embedding_encoder",  # 12657, 128
                                         shape=[params['vocabulary_length'], params['embedding_size']],  
                                         dtype=tf.float32,  
                                         initializer=initializer,  
                                         trainable=True)  
-    print('embedding_encoder: ', embedding_encoder)
-    embedding_encoder_batch = tf.nn.embedding_lookup(params=embedding_encoder, ids=features['input'])
-    print('embedding_encoder_batch: ', embedding_encoder_batch)
-    embedding_decoder = tf.get_variable(name="embedding_decoder",  
+ 
+    embedding_encoder_batch = tf.nn.embedding_lookup(params=embedding_encoder, ids=features['input']) # ?, 25, 128
+    
+    embedding_decoder = tf.get_variable(name="embedding_decoder",  # 12657, 128
                                         shape=[params['vocabulary_length'], params['embedding_size']],  
                                         dtype=tf.float32,  
                                         initializer=initializer,  
                                         trainable=True)  
-    print('embedding_decoder: ', embedding_decoder)
+    
     with tf.variable_scope('encoder_scope', reuse=tf.AUTO_REUSE):
         encoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
-        print('encoder_cell_list: ', encoder_cell_list)
-        rnn_cell = tf.contrib.rnn.MultiRNNCell(encoder_cell_list, state_is_tuple=False)
-        print('rnn_cell: ', rnn_cell)
-        encoder_outputs, encoder_states = tf.nn.dynamic_rnn(cell=rnn_cell,  
+        
+        rnn_cell = tf.contrib.rnn.MultiRNNCell(encoder_cell_list)
+        
+        encoder_outputs, encoder_states = tf.nn.dynamic_rnn(cell=rnn_cell,  # ?, 25, 128  # ? 256
                                                               inputs=embedding_encoder_batch,  
                                                               dtype=tf.float32)  
-        print('encoder_outputs: ', encoder_outputs)
-        print('encoder_states: ', encoder_states)
+
     with tf.variable_scope('decoder_scope', reuse=tf.AUTO_REUSE):
         decoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
-        print('decoder_cell_list: ', decoder_cell_list)
-        rnn_cell = tf.contrib.rnn.MultiRNNCell(decoder_cell_list, state_is_tuple=False)
-        print('rnn_cell: ', rnn_cell)
-        decoder_state = encoder_states
-        print('decoder_state: ', decoder_state)
+
+        rnn_cell = tf.contrib.rnn.MultiRNNCell(decoder_cell_list)
+
+        decoder_state = encoder_states # ?, 256
+
         predict_tokens = list()
         temp_logits = list()
+        
+        attention_plot = tf.get_variable("attention_plot", [DEFINES.max_sequence_length, DEFINES.max_sequence_length], dtype=tf.float32, trainable=False) # 25, 25
 
-        attention_plot = tf.get_variable("attention_plot", [DEFINES.max_sequence_length, DEFINES.max_sequence_length], dtype=tf.float32, trainable=False)
-        print('attention_plot: ', attention_plot)
-        output_token = tf.ones(shape=(tf.shape(encoder_outputs)[0],), dtype=tf.int32) * 1
-        print('output_token: ', output_token)
+        output_token = tf.ones(shape=(tf.shape(encoder_outputs)[0],), dtype=tf.int32) * 1 # ?
+        
         for i in range(DEFINES.max_sequence_length):
             if TRAIN:
                 if i > 0:
@@ -68,69 +67,58 @@ def model(features, labels, mode, params):
                         lambda: tf.nn.embedding_lookup(embedding_decoder, output_token) 
                     )
                 else:
-                    input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token)
+                    input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token) # Start Token
             else: 
-                input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token)
-            print('input_token_emb: ', input_token_emb)
+                input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token) # ?, 128
+            
             # 어텐션 적용 부분
-            W1 = tf.keras.layers.Dense(params['hidden_size'])
-            print('W1: ', W1)
-            W2 = tf.keras.layers.Dense(params['hidden_size'])
-            print('W2: ', W2)
-            V = tf.keras.layers.Dense(1)
-            print('V: ', V)
-            # (?, 256) -> (?, 128)
-            hidden_with_time_axis = W2(decoder_state)
-            print('hidden_with_time_axis: ', hidden_with_time_axis)
-            # (?, 128) -> (?, 1, 128)
-            hidden_with_time_axis = tf.expand_dims(hidden_with_time_axis, axis=1)
-            print('hidden_with_time_axis: ', hidden_with_time_axis)
-            # (?, 1, 128) -> (?, 25, 128)
-            hidden_with_time_axis = tf.manip.tile(hidden_with_time_axis, [1, DEFINES.max_sequence_length, 1])
-            print('hidden_with_time_axis: ', hidden_with_time_axis)
-            # (?, 25, 1)
-            score = V(tf.nn.tanh(W1(encoder_outputs) + hidden_with_time_axis))
-            print('score: ', score)
-            # (?, 25, 1)
-            attention_weights = tf.nn.softmax(score, axis=-1)
-            print('attention_weights: ', attention_weights)
-            # (?, 25, 128)
-            context_vector = attention_weights * encoder_outputs
-            print('context_vector: ', context_vector)
-            # (?, 25, 128) -> (?, 128)
-            context_vector = tf.reduce_sum(context_vector, axis=1)
-            print('context_vector: ', context_vector)
-            # (?, 256)
-            input_token_emb = tf.concat([context_vector, input_token_emb], axis=-1)
-            print('input_token_emb: ', input_token_emb)
+            W1 = tf.keras.layers.Dense(params['hidden_size']) # 128
+            W2 = tf.keras.layers.Dense(params['hidden_size']) # 128
+            V = tf.keras.layers.Dense(1) # 1
+
+            hidden_with_time_axis = W2(decoder_state) # ?, 256 -> ?, 128
+            
+            hidden_with_time_axis = tf.expand_dims(hidden_with_time_axis, axis=1) # ?, 128 -> ?, 1, 128
+            
+            hidden_with_time_axis = tf.manip.tile(hidden_with_time_axis, [1, DEFINES.max_sequence_length, 1]) # (?, 1, 128) -> (?, 25, 128)
+
+            # W1(encoder_outputs) : ?, 25, 128 -> ?, 25, 128
+            # + hidden_with_time_axis : ?, 25, 128 -> ?, 25, 128
+            # tf.nn.tanh : ?, 25, 128 -> ?, 25, 128
+            # V() : ?, 25, 1
+            score = V(tf.nn.tanh(W1(encoder_outputs) + hidden_with_time_axis)) # V() : ?, 25, 1
+
+            attention_weights = tf.nn.softmax(score, axis=-1) # ?, 25, 1 -> ?, 25, 1
+ 
+            context_vector = attention_weights * encoder_outputs # ?, 25, 1 -> ?, 25, 128
+
+            context_vector = tf.reduce_sum(context_vector, axis=1) # ?, 25, 128 -> ?, 128
+
+            input_token_emb = tf.concat([context_vector, input_token_emb], axis=-1) # ?, 256 -> ?, 256
+  
             #visualization
             if PREDICT:
                 attention_weights = tf.reshape(attention_weights, (-1, ))
+                print('attention_weights: ', attention_weights)
                 attention_plot[i].assign(attention_weights)
-                
+                print('attention_plot[i]: ', attention_plot[i])
+
             input_token_emb = tf.keras.layers.Dropout(0.5)(input_token_emb)
-            decoder_outputs, decoder_state = rnn_cell(input_token_emb, decoder_state)
-            print('decoder_outputs: ', decoder_outputs)
-            print('decoder_state: ', decoder_state)
+            decoder_outputs, decoder_state = rnn_cell(input_token_emb, decoder_state) # ?, 256  ?, 768
             decoder_outputs = tf.keras.layers.Dropout(0.5)(decoder_outputs)
     
-            output_logits = tf.layers.dense(decoder_outputs, params['vocabulary_length'], activation=None)
-            print('output_logits: ', output_logits)
+            output_logits = tf.layers.dense(decoder_outputs, params['vocabulary_length'], activation=None) # ?, 12657
             
-            output_probs = tf.nn.softmax(output_logits)
-            print('output_probs: ', output_probs)
-            output_token = tf.argmax(output_probs, axis=-1)
-            print('output_token: ', output_token)
+            output_probs = tf.nn.softmax(output_logits) # ?, 12657
+            output_token = tf.argmax(output_probs, axis=-1) # ?,
 
-            predict_tokens.append(output_token)
-            print('predict_tokens: ', predict_tokens)
-            temp_logits.append(output_logits)
-            print('temp_logits: ', temp_logits)
+            predict_tokens.append(output_token) # ?,
+            temp_logits.append(output_logits) # ?, 12657
 
-        predict = tf.transpose(tf.stack(predict_tokens, axis=0), [1, 0])
-        print('predict: ', predict)
-        logits = tf.transpose(tf.stack(temp_logits, axis=0), [1, 0, 2])
-        print('logits: ', logits)
+        predict = tf.transpose(tf.stack(predict_tokens, axis=0), [1, 0]) # ?, 25
+
+        logits = tf.transpose(tf.stack(temp_logits, axis=0), [1, 0, 2]) # ?, 25, 12657
+
     if PREDICT:
         predictions = {  
             'indexs': predict,  
@@ -139,10 +127,10 @@ def model(features, labels, mode, params):
 
         return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
-    labels_ = tf.one_hot(labels, params['vocabulary_length'])
-    print('labels_: ', labels_)
+    labels_ = tf.one_hot(labels, params['vocabulary_length']) # ?, 25, 12657
+    
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_))
-    print('loss: ', loss)
+    
     accuracy = tf.metrics.accuracy(labels=labels, predictions=predict, name='accOp')
 
     metrics = {'accuracy': accuracy}
