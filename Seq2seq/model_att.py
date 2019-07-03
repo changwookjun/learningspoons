@@ -35,18 +35,18 @@ def model(features, labels, mode, params):
     with tf.variable_scope('encoder_scope', reuse=tf.AUTO_REUSE):
         encoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
         
-        rnn_cell = tf.contrib.rnn.MultiRNNCell(encoder_cell_list)
-        print('rnn_cell: ', rnn_cell)
-        encoder_outputs, encoder_states = tf.nn.dynamic_rnn(cell=rnn_cell,  # ?, 25, 128  # ? 256
+        rnn_cell = tf.contrib.rnn.MultiRNNCell(encoder_cell_list, state_is_tuple=False)
+        
+        encoder_outputs, encoder_states = tf.nn.dynamic_rnn(cell=rnn_cell,  # ?, 25, 128  # ? 768
                                                               inputs=embedding_encoder_batch,  
                                                               dtype=tf.float32)  
 
     with tf.variable_scope('decoder_scope', reuse=tf.AUTO_REUSE):
         decoder_cell_list = [make_lstm_cell(mode, params['hidden_size'], i) for i in range(params['layer_size'])]
 
-        rnn_cell = tf.contrib.rnn.MultiRNNCell(decoder_cell_list)
-        print('rnn_cell: ', rnn_cell)
-        decoder_state = encoder_states # ?, 256
+        rnn_cell = tf.contrib.rnn.MultiRNNCell(decoder_cell_list, state_is_tuple=False)
+        
+        decoder_state = encoder_states # ?, 768
 
         predict_tokens = list()
         temp_logits = list()
@@ -67,7 +67,7 @@ def model(features, labels, mode, params):
                         lambda: tf.nn.embedding_lookup(embedding_decoder, output_token) 
                     )
                 else:
-                    input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token) # Start Token
+                    input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token) 
             else: 
                 input_token_emb = tf.nn.embedding_lookup(embedding_decoder, output_token) # ?, 128
             
@@ -104,8 +104,7 @@ def model(features, labels, mode, params):
                 print('attention_plot[i]: ', attention_plot[i])
 
             input_token_emb = tf.keras.layers.Dropout(0.5)(input_token_emb)
-            #decoder_outputs, decoder_state = rnn_cell(input_token_emb, decoder_state) # ?, 256  ?, 768
-            decoder_outputs, decoder_state = rnn_cell(input_token_emb, decoder_state)
+            decoder_outputs, decoder_state = rnn_cell(input_token_emb, decoder_state) # ?, 256  ?, 768
             decoder_outputs = tf.keras.layers.Dropout(0.5)(decoder_outputs)
     
             output_logits = tf.layers.dense(decoder_outputs, params['vocabulary_length'], activation=None) # ?, 12657
