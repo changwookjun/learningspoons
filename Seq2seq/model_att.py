@@ -134,7 +134,9 @@ def model(features, labels, mode, params):
 
     labels_ = tf.one_hot(labels, params['vocabulary_length'])
 
-    loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_))
+    #loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_))
+
+    loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=labels_, label_smoothing=0.2))
 
     accuracy = tf.metrics.accuracy(labels=labels, predictions=predict, name='accOp')
 
