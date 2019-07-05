@@ -75,9 +75,9 @@ def model(features, labels, mode, params):
             W1 = tf.keras.layers.Dense(params['hidden_size']) # 128
             W2 = tf.keras.layers.Dense(params['hidden_size']) # 128
             V = tf.keras.layers.Dense(1) # 1
-
+            print("decoder_state: ", decoder_state)
             hidden_with_time_axis = W2(decoder_state) # ?, 256 -> ?, 128
-            
+            print("hidden_with_time_axis: ", hidden_with_time_axis)
             hidden_with_time_axis = tf.expand_dims(hidden_with_time_axis, axis=1) # ?, 128 -> ?, 1, 128
             
             hidden_with_time_axis = tf.manip.tile(hidden_with_time_axis, [1, DEFINES.max_sequence_length, 1]) # (?, 1, 128) -> (?, 25, 128)
@@ -95,7 +95,7 @@ def model(features, labels, mode, params):
             context_vector = tf.reduce_sum(context_vector, axis=1) # ?, 25, 128 -> ?, 128
 
             input_token_emb = tf.concat([context_vector, input_token_emb], axis=-1) # ?, 256 -> ?, 256
-  
+            print("input_token_emb: ", input_token_emb)
             #visualization
             if PREDICT:
                 attention_weights = tf.reshape(attention_weights, (-1, ))
