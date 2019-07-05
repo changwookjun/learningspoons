@@ -35,7 +35,14 @@
 * [이론 Lecture5.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture5.pdf)   
 * [실습 Seq2seq EDA 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day5_1_EDA.ipynb)   
 * [실습 Seq2seq Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day5_2_seq2seq_Model.ipynb)      
-  
+
+<b> 6 주차  
+* [이론 Lecture6.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture6.pdf)   
+* [실습 Attention 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day6_1_Attention.ipynb)   
+* [실습 Seq2seq Attention Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day6_2_Attention_visualization.ipynb)      
+* [실습 Self Attention Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day6_3_Self_Attention.ipynb)    
+
+
 # Requirement  
 * [google Colab Notebook](https://colab.research.google.com/notebooks/welcome.ipynb#recent=true)  
 
