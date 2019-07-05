@@ -99,9 +99,7 @@ def model(features, labels, mode, params):
             #visualization
             if PREDICT:
                 attention_weights = tf.reshape(attention_weights, (-1, ))
-                print('attention_weights: ', attention_weights)
                 attention_plot[i].assign(attention_weights)
-                print('attention_plot[i]: ', attention_plot[i])
 
             input_token_emb = tf.keras.layers.Dropout(0.5)(input_token_emb)
             decoder_outputs, decoder_state = rnn_cell(input_token_emb, decoder_state) # ?, 256  ?, 768
