@@ -113,10 +113,10 @@ def model(features, labels, mode, params):
             predict_tokens.append(output_token) # ?,
             temp_logits.append(output_logits) # ?, 12657
 
-        predict = tf.transpose(tf.stack(predict_tokens, axis=0), [1, 0]) # ?, 25
-        #predict = tf.transpose(predict_tokens, [1, 0]) # ?, 25
-        logits = tf.transpose(tf.stack(temp_logits, axis=0), [1, 0, 2]) # ?, 25, 12657
-        #logits = tf.transpose(temp_logits, [1, 0, 2])
+        #predict = tf.transpose(tf.stack(predict_tokens, axis=0), [1, 0]) # ?, 25
+        predict = tf.transpose(predict_tokens, [1, 0]) # ?, 25
+        #logits = tf.transpose(tf.stack(temp_logits, axis=0), [1, 0, 2]) # ?, 25, 12657
+        logits = tf.transpose(temp_logits, [1, 0, 2])
 
     if PREDICT:
         predictions = {  
