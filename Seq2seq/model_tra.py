@@ -121,11 +121,8 @@ def Model(features, labels, mode, params):
 
     position_encode = positional_encoding(params['embedding_size'], params['max_sequence_length'])
 
-    if params['xavier_initializer']:
-        embedding_initializer = 'glorot_normal'
-    else:
-        embedding_initializer = 'uniform'
-
+    embedding_initializer = 'glorot_normal'
+    
     embedding = tf.keras.layers.Embedding(params['vocabulary_length'],
                                           params['embedding_size'],
                                           embeddings_initializer=embedding_initializer)
