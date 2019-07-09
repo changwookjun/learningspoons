@@ -58,11 +58,11 @@ class MultiHeadAttention(tf.keras.Model):
         self.masked = masked
 
         self.query_dense = tf.keras.layers.Dense(num_units, activation=tf.nn.relu)
-        print("MultiHeadAttention __init__ query_dense: ", query_dense)
+        print("MultiHeadAttention __init__ query_dense: ", self.query_dense)
         self.key_dense = tf.keras.layers.Dense(num_units, activation=tf.nn.relu)
-        print("MultiHeadAttention __init__ key_dense: ", key_dense)
+        print("MultiHeadAttention __init__ key_dense: ", self.key_dense)
         self.value_dense = tf.keras.layers.Dense(num_units, activation=tf.nn.relu)
-        print("MultiHeadAttention __init__ value_dense: ", value_dense)
+        print("MultiHeadAttention __init__ value_dense: ", self.value_dense)
 
     def scaled_dot_product_attention(self, query, key, value, masked=False):
         print("MultiHeadAttention scaled_dot_product_attention query: ", query)
