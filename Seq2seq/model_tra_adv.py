@@ -236,7 +236,7 @@ def Model(features, labels, mode, params):
         print("Model encoder_outputs: ", encoder_outputs)
 
     loop_count = params['max_sequence_length'] if PREDICT else 1
-     print("Model loop_count: ", loop_count)
+    print("Model loop_count: ", loop_count)
     predict, output, logits = None, None, None
 
     for i in range(loop_count):
