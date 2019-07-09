@@ -138,7 +138,6 @@ class Encoder(tf.keras.Model):
                 output_layer = sublayer_connection(attention_layer, p_f(attention_layer))
                 print("Encoder call output_layer: ", output_layer)
                 inputs = output_layer
-                print("Encoder call inputs: ", inputs)
         print("Encoder call return: ", output_layer)
         return output_layer
 
