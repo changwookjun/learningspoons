@@ -152,11 +152,8 @@ class Decoder(tf.keras.Model):
         print("Decoder __init__ num_layers: ", num_layers)
 
         self.self_attention = [MultiHeadAttention(model_dims, attn_heads, masked=True) for _ in range(num_layers)]
-        print("Decoder __init__ self_attention: ", self_attention)
         self.encoder_decoder_attention = [MultiHeadAttention(model_dims, attn_heads) for _ in range(num_layers)]
-        print("Decoder __init__ encoder_decoder_attention: ", encoder_decoder_attention)
         self.position_feedforward = [PositionWiseFeedForward(ffn_dims, model_dims) for _ in range(num_layers)]
-        print("Decoder __init__ position_feedforward: ", position_feedforward)
 
     def call(self, inputs, encoder_outputs):
         output_layer = None
@@ -188,9 +185,7 @@ class PositionWiseFeedForward(tf.keras.Model):
         print("PositionWiseFeedForward __init__ num_units: ", num_units) 
         print("PositionWiseFeedForward __init__ feature_shape: ", feature_shape) 
         self.inner_dense = tf.keras.layers.Dense(num_units, activation=tf.nn.relu)
-        print("PositionWiseFeedForward __init__ inner_dense: ", inner_dense)
         self.output_dense = tf.keras.layers.Dense(feature_shape)
-        print("PositionWiseFeedForward __init__ output_dense: ", output_dense)
 
     def call(self, inputs):
         print("PositionWiseFeedForward call inputs: ", inputs)
