@@ -50,10 +50,9 @@ def positional_encoding(dim, sentence_length):
 
 class MultiHeadAttention(tf.keras.Model):
     def __init__(self, num_units, heads, masked=False):
+        super(MultiHeadAttention, self).__init__()
         print("MultiHeadAttention __init__ num_units: ", num_units)
         print("MultiHeadAttention __init__ heads: ", heads)
-        super(MultiHeadAttention, self).__init__()
-
         self.heads = heads
         self.masked = masked
 
