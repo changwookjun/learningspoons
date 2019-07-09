@@ -124,9 +124,7 @@ class Encoder(tf.keras.Model):
         print("Encoder __init__ attn_heads: ", attn_heads)
         print("Encoder __init__ num_layers: ", num_layers)
         self.self_attention = [MultiHeadAttention(model_dims, attn_heads) for _ in range(num_layers)]
-        print("Encoder __init__ self_attention: ", self_attention)
         self.position_feedforward = [PositionWiseFeedForward(ffn_dims, model_dims) for _ in range(num_layers)]
-        print("Encoder __init__ position_feedforward: ", position_feedforward)
 
     def call(self, inputs):
         output_layer = None
