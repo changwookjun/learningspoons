@@ -178,8 +178,9 @@ class Decoder(tf.keras.Model):
                 masked_attention_layer = sublayer_connection(inputs, s_a(inputs, inputs, inputs))
                 print("Decoder call masked_attention_layer: ", masked_attention_layer)
                 attention_layer = sublayer_connection(masked_attention_layer, ed_a(masked_attention_layer,
-                print("Decoder call attention_layer: ", attention_layer)                                                                           encoder_outputs,
-                                                                                           encoder_outputs))
+                                                                                        encoder_outputs,
+                                                                                        encoder_outputs))
+                print("Decoder call attention_layer: ", attention_layer) 
                 output_layer = sublayer_connection(attention_layer, p_f(attention_layer))
                 print("Decoder call output_layer: ", output_layer)   
                 inputs = output_layer
