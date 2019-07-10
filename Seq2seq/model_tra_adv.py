@@ -26,12 +26,9 @@ def sublayer_connection(inputs, sublayer, dropout=0.2):
 
 def positional_encoding(dim, sentence_length):
     # 128, 25
-    # [0.00000000e+00 0.00000000e+00 0.00000000e+00 ... 3.69582366e-07 3.20045144e-07 2.77147676e-07]
     encoded_vec = np.array([pos/np.power(10000, 2*i/dim) 
                             for pos in range(sentence_length) for i in range(dim)])
-    # [0.00000000e+00 0.00000000e+00 0.00000000e+00 ... 5.69129689e-07 4.26787058e-07 3.20045144e-07]
     encoded_vec[::2] = np.sin(encoded_vec[::2]) 
-    # [1. 1. 1. ... 1. 1. 1.]
     encoded_vec[1::2] = np.cos(encoded_vec[1::2])
 
     # 25, 128
@@ -51,7 +48,7 @@ class MultiHeadAttention(tf.keras.Model):
 
     def scaled_dot_product_attention(self, query, key, value, masked=False):
         # ?, 25, 32 / ?, 25, 32 / ?, 25, 32
-        key_seq_length = float(key.get_shape().as_list()[-2]) # 25.0
+        key_seq_length = float(key.get_shape().as_list()[-1]) # 25.0
 
         key = tf.transpose(key, perm=[0, 2, 1]) # ?, 32, 25
         outputs = tf.matmul(query, key) / tf.sqrt(key_seq_length) # ?, 25, 25
