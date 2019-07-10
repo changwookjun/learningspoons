@@ -7,52 +7,41 @@ import numpy as np
 
 
 def layer_norm(inputs, eps=1e-6):
-    print("layer_norm inputs: ", inputs)
-    # LayerNorm(x + Sublayer(x))
-    feature_shape = inputs.get_shape()[-1:]
-    print("layer_norm feature_shape: ", feature_shape)
-    #  평균과 표준편차을 넘겨 준다.
-    mean = tf.keras.backend.mean(inputs, [-1], keepdims=True)
-    print("layer_norm mean: ", mean)
-    std = tf.keras.backend.std(inputs, [-1], keepdims=True)
-    print("layer_norm std: ", std)
-    beta = tf.get_variable("beta", initializer=tf.zeros(feature_shape))
-    print("layer_norm beta: ", beta)
-    gamma = tf.get_variable("gamma", initializer=tf.ones(feature_shape))
-    print("layer_norm gamma: ", gamma)
+    # ?, 25, 128
+    feature_shape = inputs.get_shape()[-1:] # 128
+    mean = tf.keras.backend.mean(inputs, [-1], keepdims=True) # ?, 25, 1
+    std = tf.keras.backend.std(inputs, [-1], keepdims=True) # ?, 25, 1
+    beta = tf.get_variable("beta", initializer=tf.zeros(feature_shape)) # 128
+    gamma = tf.get_variable("gamma", initializer=tf.ones(feature_shape)) # 128
 
-    print("layer_norm return: ", gamma * (inputs - mean) / (std + eps) + beta)
+    # ?, 25, 128
     return gamma * (inputs - mean) / (std + eps) + beta
 
 
 def sublayer_connection(inputs, sublayer, dropout=0.2):
-    print("sublayer_connection inputs: ", inputs)
-    print("sublayer_connection sublayer: ", sublayer)
+    # ?, 25, 128 / ?, 25, 128
     outputs = layer_norm(inputs + tf.keras.layers.Dropout(dropout)(sublayer))
-    print("sublayer_connection outputs: ", outputs)
     return outputs
 
 
 def positional_encoding(dim, sentence_length):
-    print("positional_encoding dim: ", dim)
-    print("positional_encoding sentence_length: ", sentence_length)
-    encoded_vec = np.array([pos/np.power(10000, 2*i/dim)
+    # 128, 25
+    # [0.00000000e+00 0.00000000e+00 0.00000000e+00 ... 3.69582366e-07 3.20045144e-07 2.77147676e-07]
+    encoded_vec = np.array([pos/np.power(10000, 2*i/dim) 
                             for pos in range(sentence_length) for i in range(dim)])
-    print("positional_encoding encoded_vec: ", encoded_vec)
-    encoded_vec[::2] = np.sin(encoded_vec[::2])
-    print("positional_encoding encoded_vec[::2]: ", encoded_vec[::2])
+    # [0.00000000e+00 0.00000000e+00 0.00000000e+00 ... 5.69129689e-07 4.26787058e-07 3.20045144e-07]
+    encoded_vec[::2] = np.sin(encoded_vec[::2]) 
+    # [1. 1. 1. ... 1. 1. 1.]
     encoded_vec[1::2] = np.cos(encoded_vec[1::2])
-    print("positional_encoding encoded_vec[1::2]: ", encoded_vec[1::2])
 
-    print("positional_encoding return: ", tf.constant(encoded_vec.reshape([sentence_length, dim]), dtype=tf.float32))
+    # 25, 128
     return tf.constant(encoded_vec.reshape([sentence_length, dim]), dtype=tf.float32)
 
 
 class MultiHeadAttention(tf.keras.Model):
     def __init__(self, num_units, heads, masked=False):
         super(MultiHeadAttention, self).__init__()
-        print("MultiHeadAttention __init__ num_units: ", num_units)
-        print("MultiHeadAttention __init__ heads: ", heads)
+        #128, 4
         self.heads = heads
         self.masked = masked
 
@@ -61,94 +50,63 @@ class MultiHeadAttention(tf.keras.Model):
         self.value_dense = tf.keras.layers.Dense(num_units, activation=tf.nn.relu)
 
     def scaled_dot_product_attention(self, query, key, value, masked=False):
-        print("MultiHeadAttention scaled_dot_product_attention query: ", query)
-        print("MultiHeadAttention scaled_dot_product_attention key: ", key)
-        print("MultiHeadAttention scaled_dot_product_attention value: ", value)
-        key_seq_length = float(key.get_shape().as_list()[-2])
-        print("MultiHeadAttention scaled_dot_product_attention key_seq_length: ", key_seq_length)
-        key = tf.transpose(key, perm=[0, 2, 1])
-        print("MultiHeadAttention scaled_dot_product_attention key: ", key)
-        outputs = tf.matmul(query, key) / tf.sqrt(key_seq_length)
-        print("MultiHeadAttention scaled_dot_product_attention outputs: ", outputs)
+        # ?, 25, 32 / ?, 25, 32 / ?, 25, 32
+        key_seq_length = float(key.get_shape().as_list()[-2]) # 25.0
+
+        key = tf.transpose(key, perm=[0, 2, 1]) # ?, 32, 25
+        outputs = tf.matmul(query, key) / tf.sqrt(key_seq_length) # ?, 25, 25
 
         if masked:
-            diag_vals = tf.ones_like(outputs[0, :, :])
-            print("MultiHeadAttention scaled_dot_product_attention diag_vals: ", diag_vals)
-            tril = tf.linalg.LinearOperatorLowerTriangular(diag_vals).to_dense()
-            print("MultiHeadAttention scaled_dot_product_attention tril: ", tril)
-            masks = tf.tile(tf.expand_dims(tril, 0), [tf.shape(outputs)[0], 1, 1])
-            print("MultiHeadAttention scaled_dot_product_attention masks: ", masks)
+            diag_vals = tf.ones_like(outputs[0, :, :]) # 25, 25
+            tril = tf.linalg.LinearOperatorLowerTriangular(diag_vals).to_dense() # 25, 25
+            masks = tf.tile(tf.expand_dims(tril, 0), [tf.shape(outputs)[0], 1, 1]) # ?, 25, 25
 
-            paddings = tf.ones_like(masks) * (-2 ** 32 + 1)
-            print("MultiHeadAttention scaled_dot_product_attention paddings: ", paddings)
-            outputs = tf.where(tf.equal(masks, 0), paddings, outputs)
-            print("MultiHeadAttention scaled_dot_product_attention outputs: ", outputs)
+            paddings = tf.ones_like(masks) * (-2 ** 32 + 1) # ?, 25, 25
+            outputs = tf.where(tf.equal(masks, 0), paddings, outputs) # ?, 25, 25
 
-        attention_map = tf.nn.softmax(outputs)
-        print("MultiHeadAttention scaled_dot_product_attention attention_map: ", attention_map)
+        attention_map = tf.nn.softmax(outputs) # ?, 25, 25
 
-        print("MultiHeadAttention scaled_dot_product_attention return: ", tf.matmul(attention_map, value))
+        # ?, 25, 32
         return tf.matmul(attention_map, value)
 
     def call(self, query, key, value):
-        print("MultiHeadAttention call query: ", query)
-        print("MultiHeadAttention call key: ", key)
-        print("MultiHeadAttention call value: ", value)
-        query = self.query_dense(query)
-        print("MultiHeadAttention call query: ", query)
-        key = self.key_dense(key)
-        print("MultiHeadAttention call key: ", key)
-        value = self.value_dense(value)
-        print("MultiHeadAttention call value: ", value)
+        # ?, 25, 128 / ?, 25, 128 / ?, 25, 128
+        query = self.query_dense(query) # ?, 25, 128
+        key = self.key_dense(key) # ?, 25, 128
+        value = self.value_dense(value) # ?, 25, 128
 
-        query = tf.concat(tf.split(query, self.heads, axis=-1), axis=0)
-        print("MultiHeadAttention call query: ", query)
-        key = tf.concat(tf.split(key, self.heads, axis=-1), axis=0)
-        print("MultiHeadAttention call key: ", key)
-        value = tf.concat(tf.split(value, self.heads, axis=-1), axis=0)
-        print("MultiHeadAttention call value: ", value)
+        query = tf.concat(tf.split(query, self.heads, axis=-1), axis=0) # ?, 25, 32
+        key = tf.concat(tf.split(key, self.heads, axis=-1), axis=0) # ?, 25, 32
+        value = tf.concat(tf.split(value, self.heads, axis=-1), axis=0) # ?, 25, 32
 
-        attention_map = self.scaled_dot_product_attention(query, key, value, self.masked)
-        print("MultiHeadAttention call attention_map: ", attention_map)
-        attn_outputs = tf.concat(tf.split(attention_map, self.heads, axis=0), axis=-1)
-        print("MultiHeadAttention call attn_outputs: ", attn_outputs)
+        attention_map = self.scaled_dot_product_attention(query, key, value, self.masked) # ?, 25, 32
+        attn_outputs = tf.concat(tf.split(attention_map, self.heads, axis=0), axis=-1) # ?, 25, 128
         return attn_outputs
 
 
 class Encoder(tf.keras.Model):
     def __init__(self, model_dims, ffn_dims, attn_heads, num_layers=1):
         super(Encoder, self).__init__()
-        print("Encoder __init__ model_dims: ", model_dims)
-        print("Encoder __init__ ffn_dims: ", ffn_dims)
-        print("Encoder __init__ attn_heads: ", attn_heads)
-        print("Encoder __init__ num_layers: ", num_layers)
+        # 128, 512, 4, 3
         self.self_attention = [MultiHeadAttention(model_dims, attn_heads) for _ in range(num_layers)]
         self.position_feedforward = [PositionWiseFeedForward(ffn_dims, model_dims) for _ in range(num_layers)]
 
     def call(self, inputs):
         output_layer = None
-        print("Encoder call inputs: ", inputs)
+        # ?, 25, 128
         for i, (s_a, p_f) in enumerate(zip(self.self_attention, self.position_feedforward)):
-            print("Encoder call i: ", i)
-            print("Encoder call s_a: ", s_a)
-            print("Encoder call p_f: ", p_f)
             with tf.variable_scope('encoder_layer_' + str(i + 1)):
-                attention_layer = sublayer_connection(inputs, s_a(inputs, inputs, inputs))
-                print("Encoder call attention_layer: ", attention_layer)
-                output_layer = sublayer_connection(attention_layer, p_f(attention_layer))
-                print("Encoder call output_layer: ", output_layer)
+                attention_layer = sublayer_connection(inputs, s_a(inputs, inputs, inputs)) # ?, 25, 128
+                output_layer = sublayer_connection(attention_layer, p_f(attention_layer)) # ?, 25, 128
                 inputs = output_layer
-        print("Encoder call return: ", output_layer)
+        # ?, 25, 128
         return output_layer
 
 
 class Decoder(tf.keras.Model):
     def __init__(self, model_dims, ffn_dims, attn_heads, num_layers=1):
         super(Decoder, self).__init__()
-        print("Decoder __init__ model_dims: ", model_dims)
-        print("Decoder __init__ ffn_dims: ", ffn_dims)
-        print("Decoder __init__ attn_heads: ", attn_heads)
-        print("Decoder __init__ num_layers: ", num_layers)
+        # 128, 512, 4, 3
 
         self.self_attention = [MultiHeadAttention(model_dims, attn_heads, masked=True) for _ in range(num_layers)]
         self.encoder_decoder_attention = [MultiHeadAttention(model_dims, attn_heads) for _ in range(num_layers)]
@@ -156,42 +114,31 @@ class Decoder(tf.keras.Model):
 
     def call(self, inputs, encoder_outputs):
         output_layer = None
-        print("Decoder call inputs: ", inputs)
-        print("Decoder call encoder_outputs: ", encoder_outputs)
+        # ?, 25, 128 / ?, 25, 128
 
         for i, (s_a, ed_a, p_f) in enumerate(zip(self.self_attention, self.encoder_decoder_attention, self.position_feedforward)):
-            print("Decoder call i: ", i)
-            print("Decoder call s_a: ", s_a)
-            print("Decoder call ed_a: ", ed_a)
-            print("Decoder call p_f: ", p_f)
             with tf.variable_scope('decoder_layer_' + str(i + 1)):
-                masked_attention_layer = sublayer_connection(inputs, s_a(inputs, inputs, inputs))
-                print("Decoder call masked_attention_layer: ", masked_attention_layer)
-                attention_layer = sublayer_connection(masked_attention_layer, ed_a(masked_attention_layer,
+                masked_attention_layer = sublayer_connection(inputs, s_a(inputs, inputs, inputs)) # ?, 25, 128
+                attention_layer = sublayer_connection(masked_attention_layer, ed_a(masked_attention_layer, # ?, 25, 128
                                                                                         encoder_outputs,
                                                                                         encoder_outputs))
-                print("Decoder call attention_layer: ", attention_layer) 
-                output_layer = sublayer_connection(attention_layer, p_f(attention_layer))
-                print("Decoder call output_layer: ", output_layer)   
+                output_layer = sublayer_connection(attention_layer, p_f(attention_layer)) # ?, 25, 128  
                 inputs = output_layer
-        print("Decoder call return: ", output_layer) 
+        # ?, 25, 128
         return output_layer
 
 
 class PositionWiseFeedForward(tf.keras.Model):
     def __init__(self, num_units, feature_shape):
         super(PositionWiseFeedForward, self).__init__()
-        print("PositionWiseFeedForward __init__ num_units: ", num_units) 
-        print("PositionWiseFeedForward __init__ feature_shape: ", feature_shape) 
+        # 512, 128
         self.inner_dense = tf.keras.layers.Dense(num_units, activation=tf.nn.relu)
         self.output_dense = tf.keras.layers.Dense(feature_shape)
 
     def call(self, inputs):
-        print("PositionWiseFeedForward call inputs: ", inputs)
-        inner_layer = self.inner_dense(inputs)
-        print("PositionWiseFeedForward call inner_layer: ", inner_layer)
-        outputs = self.output_dense(inner_layer)
-        print("PositionWiseFeedForward call outputs: ", outputs)
+        # ?, 25, 128
+        inner_layer = self.inner_dense(inputs) # ?, 25, 512
+        outputs = self.output_dense(inner_layer)  # ?, 25, 128
         return outputs
 
 
@@ -200,52 +147,40 @@ def Model(features, labels, mode, params):
     EVAL = mode == tf.estimator.ModeKeys.EVAL
     PREDICT = mode == tf.estimator.ModeKeys.PREDICT
 
-    position_encode = positional_encoding(params['embedding_size'], params['max_sequence_length'])
-    print("Model position_encode: ", position_encode)
-    embedding = tf.keras.layers.Embedding(params['vocabulary_length'],
+    position_encode = positional_encoding(params['embedding_size'], params['max_sequence_length']) # 25, 128
+
+    embedding = tf.keras.layers.Embedding(params['vocabulary_length'], # 12657 , 128
                                           params['embedding_size'])
-    print("Model embedding: ", embedding)
 
     encoder_layers = Encoder(params['model_hidden_size'], params['ffn_hidden_size'],
                       params['attention_head_size'], params['layer_size'])
-    print("Model encoder_layers: ", encoder_layers)
 
     decoder_layers = Decoder(params['model_hidden_size'], params['ffn_hidden_size'],
                       params['attention_head_size'], params['layer_size'])
-    print("Model decoder_layers: ", decoder_layers)
 
     logit_layer = tf.keras.layers.Dense(params['vocabulary_length'])
-    print("Model logit_layer: ", logit_layer)
 
     with tf.variable_scope('encoder', reuse=tf.AUTO_REUSE):
-        x_embedded_matrix = embedding(features['input']) + position_encode
-        print("Model x_embedded_matrix: ", x_embedded_matrix)
-        encoder_outputs = encoder_layers(x_embedded_matrix)
-        print("Model encoder_outputs: ", encoder_outputs)
+        x_embedded_matrix = embedding(features['input']) + position_encode #?, 25, 128
+        
+        encoder_outputs = encoder_layers(x_embedded_matrix) # ?, 25, 128
 
-    loop_count = params['max_sequence_length'] if PREDICT else 1
-    print("Model loop_count: ", loop_count)
+    loop_count = params['max_sequence_length'] if PREDICT else 1 # 1
+
     predict, output, logits = None, None, None
 
     for i in range(loop_count):
-        print("Model i: ", i)
         with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
             if i > 0:
                 output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :-1]], axis=-1)
-                print("Model output: ", output)
             else:
-                output = features['output']
-                print("Model output: ", output)
+                output = features['output'] # ?, 25
 
-            y_embedded_matrix = embedding(output) + position_encode
-            print("Model y_embedded_matrix: ", y_embedded_matrix)
-            decoder_outputs = decoder_layers(y_embedded_matrix, encoder_outputs)
-            print("Model decoder_outputs: ", decoder_outputs)
+            y_embedded_matrix = embedding(output) + position_encode # ?, 25, 128
+            decoder_outputs = decoder_layers(y_embedded_matrix, encoder_outputs) # ?, 25, 128
 
-            logits = logit_layer(decoder_outputs)
-            print("Model logits: ", logits)
-            predict = tf.argmax(logits, 2)
-            print("Model predict: ", predict)
+            logits = logit_layer(decoder_outputs) # ?, 25, 12657
+            predict = tf.argmax(logits, 2) # ?, 25
 
     if PREDICT:
         predictions = {
