@@ -62,7 +62,8 @@ class MultiHeadAttention(tf.keras.Model):
             outputs = tf.where(tf.equal(masks, 0), paddings, outputs) # ?, 25, 25
 
         attention_map = tf.nn.softmax(outputs) # ?, 25, 25
-
+        print("attention_map: ", attention_map)
+        print("value: ", value)
         # ?, 25, 32
         return tf.matmul(attention_map, value)
 
@@ -77,7 +78,9 @@ class MultiHeadAttention(tf.keras.Model):
         value = tf.concat(tf.split(value, self.heads, axis=-1), axis=0) # ?, 25, 32
 
         attention_map = self.scaled_dot_product_attention(query, key, value, self.masked) # ?, 25, 32
+        print("attention_map: ", attention_map)
         attn_outputs = tf.concat(tf.split(attention_map, self.heads, axis=0), axis=-1) # ?, 25, 128
+        print("attn_outputs: ", attn_outputs)
         return attn_outputs
 
 
