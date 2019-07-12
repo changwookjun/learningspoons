@@ -170,14 +170,14 @@ def Model(features, labels, mode, params):
     output = tf.expand_dims(decoder_input, 0)
     print("loop_count: ", loop_count)
 
+    one_token = tf.ones(shape=(tf.shape(encoder_outputs)[0],), dtype=tf.int32) * 1 # ?
+    print("one_token: ", one_token)
+
     for i in range(loop_count):
         with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
             print("i: ", i)
             if i > 0:
-                print("i > 0 i: ", i)
-                one_token = tf.ones(shape=(tf.shape(encoder_outputs)[0],), dtype=tf.int32) * 1 # ?
                 #one = tf.ones((output.shape[0], 1), dtype=tf.int64)
-                print("one_token: ", one_token)
                 output = tf.concat([one_token, predict[:, :-1]], axis=-1)
                 print("output: ", output)
             else:
