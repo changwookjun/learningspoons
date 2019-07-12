@@ -41,6 +41,7 @@
 * [실습 Attention 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day6_1_Attention.ipynb)   
 * [실습 Seq2seq Attention Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day6_2_Attention_visualization.ipynb)      
 * [실습 Self Attention Model 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day6_3_Self_Attention.ipynb)    
+  
 <b> 7 주차  
 * [이론 Lecture7.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture7.pdf)   
 * [실습 Transformer 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day7_1_Transformer_advance.ipynb)   
