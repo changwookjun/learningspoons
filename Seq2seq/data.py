@@ -145,6 +145,30 @@ def pred2string(value, dictionary):
 
     return answer
 
+def pred_next_string(value, dictionary):
+    # 텍스트 문장을 보관할 배열을 선언한다.
+    sentence_string = []
+    is_finished = False
+
+    # 인덱스 배열 하나를 꺼내서 v에 넘겨준다.
+    for v in value:
+        # 딕셔너리에 있는 단어로 변경해서 배열에 담는다.
+        sentence_string = [dictionary[index] for index in v['indexs']]
+
+    answer = ""
+    # 패딩값도 담겨 있으므로 패딩은 모두 스페이스 처리 한다.
+    for word in sentence_string:
+        if word == END:
+            is_finished = True
+            break
+
+        if word != PAD and word != END:
+            answer += word
+            answer += " "
+
+    # 결과를 출력한다.
+    return answer, is_finished
+    
 # 데이터 각 요소에 대해서 rearrange 함수를 
 # 통해서 요소를 변환하여 맵으로 구성한다.
 def rearrange(input, output, target):
