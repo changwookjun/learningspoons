@@ -174,6 +174,7 @@ def Model(features, labels, mode, params):
         with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
             print("i: ", i)
             if i > 0:
+                print("i > 0 i: ", i)
                 one = tf.ones((output.shape[0], 1), dtype=tf.int64)
                 print("one: ", one)
                 output = tf.concat([one, predict[:, :-1]], axis=-1)
