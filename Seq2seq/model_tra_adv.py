@@ -185,8 +185,8 @@ def Model(features, labels, mode, params):
                 print("logits: ", logits)
                 predict = tf.argmax(logits, 2) # ?, 25
                 print("predict: ", predict)        
-                predict_tokens[i] = predict
-                print("predict_tokens: ", predict_tokens[i])
+                predict_tokens[i] = predict[i]
+                print("predict_tokens[i]: ", predict_tokens[i])
 
             predictions = {
                 'indexs': predict,
