@@ -174,7 +174,7 @@ def Model(features, labels, mode, params):
         with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
             print("i: ", i)
             if i > 0:
-                output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int32), predict[:, :-1]], axis=-1)
+                output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :-1]], axis=-1)
             else:
                 output = features['output'] # ?, 25
 
@@ -188,9 +188,9 @@ def Model(features, labels, mode, params):
             print("predict: ", predict)
 
     if PREDICT:
-        predict_tokens = list()
-        predict_tokens.append(predict)
-        predict = tf.stack(predict_tokens, axis=0)
+        #predict_tokens = list()
+        #predict_tokens.append(predict)
+        #predict = tf.stack(predict_tokens, axis=0)
         predictions = {
             'indexs': predict,
             'logits': logits,
