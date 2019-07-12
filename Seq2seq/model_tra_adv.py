@@ -173,7 +173,7 @@ def Model(features, labels, mode, params):
                 print("decoder i : ", i)
                 if i > 0:
                     print("predict[:, i-1:]: ", predict[:, i-1:])
-                    output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, i-1:]], axis=-1)
+                    output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :]], axis=-1)
                     print("i > 0 output: ", output)
                 else:
                     output = features['output'] # ?, 25
@@ -184,16 +184,14 @@ def Model(features, labels, mode, params):
                 print("decoder_outputs: ", decoder_outputs)
                 logits = logit_layer(decoder_outputs) # ?, 25, 12657
                 print("logits: ", logits)
-                predict = tf.argmax(logits, 2) # ?, 25
-                print("predict: ", predict)        
-                predict_tokens.append(predict[:, i])
-                print("predict_tokens[:, i]: ", predict_tokens[:, i])
+                predict = tf.argmax(logits, 2) # ?, 25      
+                print("predict: ", predict)
 
-            predictions = {
-                'indexs': predict,
-                'logits': logits,
-            }
-            return tf.estimator.EstimatorSpec(mode, predictions=predictions)
+        predictions = {
+            'indexs': predict,
+            'logits': logits,
+        }
+        return tf.estimator.EstimatorSpec(mode, predictions=predictions)
 
 
     for i in range(loop_count):
