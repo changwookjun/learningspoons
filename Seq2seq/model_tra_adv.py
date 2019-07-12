@@ -168,34 +168,23 @@ def Model(features, labels, mode, params):
     predict_tokens = list()
     decoder_input = [params['max_sequence_length']]
     output = tf.expand_dims(decoder_input, 0)
-    print("loop_count: ", loop_count)
 
     one_token = tf.ones(shape=(tf.shape(encoder_outputs)[0], 1), dtype=tf.int64) * 1
-    print("one_token: ", one_token)
 
     for i in range(loop_count):
         with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
-            print("i: ", i)
             if i > 0:
-                #one = tf.ones((output.shape[0], 1), dtype=tf.int64)
                 output = tf.concat([one_token, predict[:, :-1]], axis=-1)
-                print("output: ", output)
             else:
                 output = features['output'] # ?, 25
 
-            print("output: ", output)
             y_embedded_matrix = embedding(output) + position_encode # ?, 25, 128
             decoder_outputs = decoder_layers(y_embedded_matrix, encoder_outputs) # ?, 25, 128
             
             logits = logit_layer(decoder_outputs) # ?, 25, 12657
-            print("logits: ", logits)
             predict = tf.argmax(logits, 2) # ?, 25
-            print("predict: ", predict)
 
     if PREDICT:
-        #predict_tokens = list()
-        #predict_tokens.append(predict)
-        #predict = tf.stack(predict_tokens, axis=0)
         predictions = {
             'indexs': predict,
             'logits': logits,
