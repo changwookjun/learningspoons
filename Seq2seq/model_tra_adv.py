@@ -166,12 +166,13 @@ def Model(features, labels, mode, params):
     predict, output, logits = None, None, None
 
     predict_tokens = list()
+    print("loop_count: ", loop_count)
     if PREDICT:
         for i in range(loop_count):
             with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
                 print("decoder i : ", i)
                 if i > 0:
-                    output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :-1]], axis=-1)
+                    output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :]], axis=-1)
                     print("i > 0 output: ", output)
                 else:
                     output = features['output'] # ?, 25
@@ -184,8 +185,8 @@ def Model(features, labels, mode, params):
                 print("logits: ", logits)
                 predict = tf.argmax(logits, 2) # ?, 25
                 print("predict: ", predict)        
-                predict_tokens.append(predict)
-                print("predict_tokens: ", predict_tokens)
+                predict_tokens[i] = predict
+                print("predict_tokens: ", predict_tokens[i])
 
             predictions = {
                 'indexs': predict,
@@ -196,21 +197,15 @@ def Model(features, labels, mode, params):
 
     for i in range(loop_count):
         with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
-            print("decoder i : ", i)
             if i > 0:
                 output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :-1]], axis=-1)
-                print("i > 0 output: ", output)
             else:
                 output = features['output'] # ?, 25
-                print("output: ", output)
 
             y_embedded_matrix = embedding(output) + position_encode # ?, 25, 128
             decoder_outputs = decoder_layers(y_embedded_matrix, encoder_outputs) # ?, 25, 128
-            print("decoder_outputs: ", decoder_outputs)
             logits = logit_layer(decoder_outputs) # ?, 25, 12657
-            print("logits: ", logits)
             predict = tf.argmax(logits, 2) # ?, 25
-            print("predict: ", predict)
 
     # if PREDICT:
     #     predictions = {
