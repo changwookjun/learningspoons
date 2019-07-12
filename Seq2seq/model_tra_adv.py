@@ -175,9 +175,10 @@ def Model(features, labels, mode, params):
             print("i: ", i)
             if i > 0:
                 print("i > 0 i: ", i)
-                one = tf.ones((output.shape[0], 1), dtype=tf.int64)
-                print("one: ", one)
-                output = tf.concat([one, predict[:, :-1]], axis=-1)
+                one_token = tf.ones(shape=(tf.shape(encoder_outputs)[0],), dtype=tf.int32) * 1 # ?
+                #one = tf.ones((output.shape[0], 1), dtype=tf.int64)
+                print("one_token: ", one_token)
+                output = tf.concat([one_token, predict[:, :-1]], axis=-1)
                 print("output: ", output)
             else:
                 output = features['output'] # ?, 25
