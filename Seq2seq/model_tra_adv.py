@@ -172,7 +172,7 @@ def Model(features, labels, mode, params):
             with tf.variable_scope('decoder', reuse=tf.AUTO_REUSE):
                 print("decoder i : ", i)
                 if i > 0:
-                    print("predict[:, i-1:]: ", predict[:, i-1:])
+                    #print("predict[:, i-1:]: ", predict[:, :-1])
                     output = tf.concat([tf.ones((output.shape[0], 1), dtype=tf.int64), predict[:, :]], axis=-1)
                     print("i > 0 output: ", output)
                 else:
@@ -185,7 +185,7 @@ def Model(features, labels, mode, params):
                 logits = logit_layer(decoder_outputs) # ?, 25, 12657
                 print("logits: ", logits)
                 predict = tf.argmax(logits, 2) # ?, 25      
-                print("predict: ", predict)
+                #print("predict: ", predict)
 
         predictions = {
             'indexs': predict,
