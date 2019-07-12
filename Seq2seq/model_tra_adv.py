@@ -188,6 +188,9 @@ def Model(features, labels, mode, params):
             print("predict: ", predict)
 
     if PREDICT:
+        predict_tokens = list()
+        predict_tokens.append(predict)
+        predict = tf.stack(predict_tokens, axis=0)
         predictions = {
             'indexs': predict,
             'logits': logits,
