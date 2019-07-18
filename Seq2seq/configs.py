@@ -3,7 +3,8 @@ import tensorflow as tf
 
 tf.app.flags.DEFINE_string('f', '', 'kernel') # 주피터에서 커널에 전달하기 위한 프레그 방법
 tf.app.flags.DEFINE_integer('batch_size', 64, 'batch size') # 배치 크기
-tf.app.flags.DEFINE_integer('train_steps', 20000, 'train steps') # 학습 에포크 
+#tf.app.flags.DEFINE_integer('train_steps', 20000, 'train steps') # 학습 에포크 
+tf.app.flags.DEFINE_integer('train_steps', 200, 'train steps') # 학습 에포크 
 tf.app.flags.DEFINE_float('dropout_width', 0.5, 'dropout width') # 드롭아웃 크기
 tf.app.flags.DEFINE_integer('layer_size', 3, 'layer size') # 멀티 레이어 크기 (multi rnn)
 tf.app.flags.DEFINE_integer('hidden_size', 128, 'weights size') # 가중치 크기
