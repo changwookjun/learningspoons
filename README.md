@@ -45,7 +45,7 @@
 <b> 7 주차  
 * [이론 Lecture7.pdf](https://github.com/changwookjun/learningspoons/blob/master/Slide/Lecture7.pdf)   
 * [실습 Transformer 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day7_1_Transformer_advance.ipynb)   
-  
+* [실습 Transformer PB 구현 하기](https://github.com/changwookjun/learningspoons/blob/master/Day7_2_Transformer_advance_pb.ipynb)  
 
 # Requirement  
 * [google Colab Notebook](https://colab.research.google.com/notebooks/welcome.ipynb#recent=true)  
